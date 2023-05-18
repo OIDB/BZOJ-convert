@@ -5,6 +5,7 @@ const yamljs = require('yamljs');
 
 var download=(host,path,referer,localpath)=>{
     if(existsSync(localpath))unlinkSync(localpath);
+    // console.log(host,path,referer,localpath)
     https.get({
         host, path,
         headers: {
@@ -35,6 +36,10 @@ var list = JSON.parse(readFileSync('dist/list.json','utf8'));
 let getstatement=(id)=>{
     if(id>=list.length)return;
     var pid=list[id].id;
+    if(existsSync(`dist/problems/${pid}`)){
+        getstatement(id+1); return;
+    }
+    process.stdout.write(`Getting problem P${pid} (${id+1}/${list.length}) (${(id/list.length*100).toFixed(3)}%)\r`);
     https.get({
         host: 'hydro.ac',
         path: `/d/bzoj/p/${pid}`,
@@ -46,13 +51,12 @@ let getstatement=(id)=>{
         res.on('data',chunk=>data+=chunk);
         res.on('end',()=>{
             var pdoc=JSON.parse(data).pdoc;
-            if(!existsSync(`dist/problems/${pdoc.docId}`))
-                mkdirSync(`dist/problems/${pdoc.docId}`);
-            if(!existsSync(`dist/problems/${pdoc.docId}/testdata`))
-                mkdirSync(`dist/problems/${pdoc.docId}/testdata`);
-                
+            mkdirSync(`dist/problems/${pdoc.docId}`);
+            mkdirSync(`dist/problems/${pdoc.docId}/testdata`);
+
+            if(!pdoc.content.startsWith('{'))
+                pdoc.content=JSON.stringify({zh:pdoc.content});
             var content=JSON.parse(pdoc.content);
-            console.log(pdoc);
             var mainconfig={
                 pid: pdoc.docId,
                 owner: 1,
@@ -84,14 +88,14 @@ let getstatement=(id)=>{
                     setTimeout(()=>{
                         download(
                             'hydro.ac',
-                            `/d/bzoj/p/${pdoc.docId}/file/${file.name}?type=additional_file`,
+                            `/d/bzoj/p/${pdoc.docId}/file/${encodeURIComponent(file.name)}?type=additional_file`,
                             `/d/bzoj/p/${pdoc.docId}`,
                             `dist/problems/${pdoc.docId}/additional_file/${file.name}`
                         );
-                    },500*fileIndex+500);
+                    },300*(fileIndex+1));
                 });
             }
-            setTimeout(()=>getstatement(id+1),pdoc.additional_file.length*500+500);
+            setTimeout(()=>getstatement(id+1),pdoc.additional_file.length*300+500);
         });
     }).on("error",console.error);
 }
