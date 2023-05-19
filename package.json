@@ -23,6 +23,7 @@
   "dependencies": {
     "download": "^8.0.0",
     "fs": "^0.0.1-security",
+    "gh-pages": "^5.0.0",
     "superagent": "^8.0.9",
     "yamljs": "^0.3.0"
   }

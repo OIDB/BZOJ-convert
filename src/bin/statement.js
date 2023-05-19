@@ -58,7 +58,7 @@ let getstatement=(id)=>{
                 pdoc.content=JSON.stringify({zh:pdoc.content});
             var content=JSON.parse(pdoc.content);
             var mainconfig={
-                pid: pdoc.docId,
+                pid: `P${pdoc.docId}`,
                 owner: 1,
                 title: list[id].title,
                 tag: list[id].tag,
